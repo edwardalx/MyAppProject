@@ -1,60 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data Collection App</title>
+  <title>Flask Data App</title>
 </head>
 <body>
-  <h1>Data Collection App</h1>
   <form id="dataForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
-    <br>
-    <label for="age">Age:</label>
-    <input type="number" id="age" name="age" required>
-    <br>
+    <input type="text" name="name" placeholder="Enter your name" required />
+    <input type="number" name="age" placeholder="Enter your age" required />
     <button type="submit">Submit</button>
   </form>
-  
-  <h2>Collected Data:</h2>
-  <pre id="output"></pre>
+
+  <button id="retrieveData">Get Stored Data</button>
+  <div id="output"></div>
 
   <script>
     const form = document.getElementById('dataForm');
     const output = document.getElementById('output');
 
+    // Submit data to Flask
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      const name = document.getElementById('name').value;
-      const age = document.getElementById('age').value;
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
 
-      // Send data to the backend
-      try {
-        const response = await fetch('http://127.0.0.1:5000/collect-data', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, age }),
-        });
+      const response = await fetch('/collect-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-        const data = await response.json();
+      const result = await response.json();
+      console.log(result);
+      output.textContent = result.message;
+    });
 
-        // Display the response in the output section
-        if (response.ok) {
-          output.textContent = JSON.stringify(data.data, null, 2);
-        } else {
-          alert(data.error);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to connect to the server.');
-      }
-
-      // Clear form inputs
-      form.reset();
+    // Retrieve stored data
+    document.getElementById('retrieveData').addEventListener('click', async () => {
+      const response = await fetch('/get-data');
+      const data = await response.json();
+      output.textContent = JSON.stringify(data);
     });
   </script>
 </body>
